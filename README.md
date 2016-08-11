@@ -25,41 +25,52 @@
 
  1.1 Message Programming(MQ-based)
  
- Define a `MessageProducer` Class, Which injected `MessageSender`.
+ Assuming that we are in Member signup condition, 
  
- Use `send` method to produce msg.
+ we need to notify member when they signup successful by sms.
+ 
+ Define a `MemberService` Class, Which injected `MessageSender`.
+ 
+ Use `send` method to produce message.
 
  ``` java
- @Component
- public class MsgProducer {
+ @Service
+ public class MemberService {
 
+    @Autowired 
+    private MemberDao memberDao;
+    
     // MesageSender is provided by Koper framework.
     // We can configure it with Spring by configuration File such as <bean>
     @Autowired
     private MessageSender messageSender;
 
-    public void produceMsg() {
-        final String topic = "com.zhaimi.message.demo.message.refreshCache";
-        final String cacheKey = "some/building";
-        messageSender.send(topic, cacheKey);
+    public void signup(Member member) {
+        memberDao.createMember(member);
+        final String topic = "com.zhaimi.message.demo.message.notifyMemberAfterSignup";
+        // OLD Style: sync notify smsService.sendSms(topic, "You have signed up successfully!" + member.getPhoneNo());
+        // New Style: async notify
+        messageSender.send(topic, "You have signed up successfully! " + member.getPhoneNo()");
     }
     
  }
  ```
 
- Define a `MessageConsumer` Class, Which extends `AbstractMessageListener` class.
+ Define a `MemberSignupListener` Class, Which extends `AbstractMessageListener` class.
  
  Use `@Listen` annotation to specify the exact `Topic` you want to listen.
 
  ``` java
  @Component
- public class MsgConsumer extends AbstractMessageListener {
+ public class MemberSignupListener extends AbstractMessageListener {
 
-    @Listen(topic = "com.zhaimi.message.demo.message.refreshCache")
+    @Autowired
+    private SmsService smsService;
+
+    @Listen(topic = "com.zhaimi.message.demo.message.notifyMemberAfterSignup")
     @Override
     public void onMessage(String msg) {
-        System.out.println("current time is " + LocalDateTime.now().toString() + ", " +
-                "MsgConsumer receive msg, msg is " + msg);
+        smsService.sendSms(msg);
     }
     
  }
@@ -71,23 +82,24 @@
  
  The corresponding message topic is consist of `package name` + `class name` + `method name`.
  ``` java 
- package com.zhaimi.message.demo.dataevent.mapper.impl;
+ package com.zhaimi.message.demo.dataevent.dao.impl;
  
  @Repository
- public class OrderMapperImpl implements OrderMapper {
+ public class OrderDao implements OrderDaoImpl {
 
+    @Autowired
+    private SqlSessionTemplate sqlSessionTemplate;
+    
     @Override
     public Integer insertOrder(Order order) {
-        System.out.println("orderNo : " + order.getOrderNo());
-        System.out.println("create time: " + order.getCreatedTime());
+        sqlSessionTemplate.insert("OrderDao.insert", order);
         return 1;
 
     }
 
     @Override
     public Integer updateOrder(Order order) {
-        System.out.println("orderNo: " + order.getOrderNo());
-        System.out.println("create time: " + order.getCreatedTime());
+        sqlSessionTemplate.update("OrderDao.update", order);
         return 1;
     }
     
@@ -105,11 +117,13 @@
     public void onInsertOrder(Order order) {
         System.out.println("orderNo : " + order.getOrderNo());
         System.out.println("create time : " + order.getCreatedTime());
+        // do some data analysis
     }
 
     public void onUpdateOrder(Order order) {
         System.out.println("orderNo : " + order.getOrderNo());
         System.out.println("create time :" + order.getCreatedTime());
+        // do some data analysis
     }
     
  }
