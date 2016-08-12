@@ -11,14 +11,12 @@
 
 
 # Feature
- *  A simplified set of MQ-based programming model and API.
- *  A simplified set of data event API.
-  * Easy to develop asynchronous process on data event.
+ *  A set of simplified MQ-based programming model and API.
+ *  A set of simplified data event API.
  *  MQ provider independent. It supports Kafka, RabbitMQ or other provider as message queue.
- *  High performance and scalability.
- *  High avalibility.
+ *  High performance and throuput.
  *  High extensibility.
- *  High-level feature, time spot recording, message tracking
+ *  High-level feature: time spot recording, message tracking
  
 #Programming Demo
 
