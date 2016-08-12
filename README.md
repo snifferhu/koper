@@ -94,7 +94,6 @@
     public Integer insertOrder(Order order) {
         sqlSessionTemplate.insert("OrderDao.insert", order);
         return 1;
-
     }
 
     @Override
@@ -111,7 +110,7 @@
  use `@DataListener` annotation to specify `dataObject` attribute(the same to topic) you want to listen.
  ``` java
  @Component
- @DataListener(dataObject = "com.zhaimi.message.demo.dataevent.mapper.impl.OrderMapperImpl")
+ @DataListener(dataObject = "com.zhaimi.message.demo.dataevent.dao.impl.OrderMapperImpl")
  public class OrderListener {
 
     public void onInsertOrder(Order order) {
